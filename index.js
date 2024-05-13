@@ -35,6 +35,14 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
     });
+    //single data
+    app.get("/sinleservic/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await serviccol.findOne(query);
+      //console.log(result);
+      res.send(result);
+    });
     // spasific email
     app.get("/service/:email", async (req, res) => {
       const email = req.params.email;
@@ -51,14 +59,17 @@ async function run() {
 
     //update data
 
-    app.put("/updatsingledata/:id", async (req, res) => {
+    app.put("/updatsingleservic/:id", async (req, res) => {
       const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
       const data = req.body;
+      const query = { _id: new ObjectId(id) };
+      const option = { upsert: true };
       const updatData = {
-        $set: {},
+        $set: {
+          ...data,
+        },
       };
-      const result = await turistcolec.updateOne(query, updatData);
+      const result = await serviccol.updateOne(query, updatData, option);
       res.send(result);
     });
 
