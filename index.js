@@ -1,11 +1,11 @@
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const port = process.env.PORT || 5001;
 const app = express();
 const corsOption = {
-  origin: ["http://localhost:5173"],
+  origin: ["http://localhost:5173", "http://localhost:5001"],
   Credentials: true,
   optionSuccessStatus: 200,
 };
@@ -28,10 +28,45 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const serviccol = client.db("serviceDB").collection("service");
+
     //get all data from db
     app.get("/service", async (req, res) => {
       const cursor = serviccol.find();
       const result = await cursor.toArray();
+      res.send(result);
+    });
+    // spasific email
+    app.get("/service/:email", async (req, res) => {
+      const email = req.params.email;
+      const result = await serviccol.find({ email: email }).toArray();
+      res.send(result);
+    });
+    // post data
+    app.post("/service", async (req, res) => {
+      const newServics = req.body;
+      console.log(newServics);
+      const result = await serviccol.insertOne(newServics);
+      res.send(result);
+    });
+
+    //update data
+
+    app.put("/updatsingledata/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const data = req.body;
+      const updatData = {
+        $set: {},
+      };
+      const result = await turistcolec.updateOne(query, updatData);
+      res.send(result);
+    });
+
+    //deleted data in servic
+    app.delete("/service/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await serviccol.deleteOne(query);
       res.send(result);
     });
 
