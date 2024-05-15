@@ -9,11 +9,11 @@ const app = express();
 const corsOption = {
   origin: [
     "http://localhost:5173",
-    "http://localhost:5174",
     "https://doctoe-servics.web.app",
+    "https://doctoe-servics.firebaseapp.com",
   ],
   credentials: true,
-  optionSuccessStatus: 200,
+  //optionSuccessStatus: 200,
 };
 app.use(cors(corsOption));
 app.use(express.json());
@@ -49,6 +49,11 @@ const verifytoken = (req, res, next) => {
   });
 };
 
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production" ? true : false,
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+};
 //==============================================================
 
 async function run() {
@@ -62,22 +67,18 @@ async function run() {
       const token = jwt.sign(user, process.env.DB_TOKEN, {
         expiresIn: "10h",
       });
-      res
-        .cookie("token", token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-        })
-        .send({ success: true });
+      res.cookie("token", token, cookieOptions).send({ success: true });
     });
     //cler token in logout
     app.post("/logout", async (req, res) => {
-      const user = req.body;
+      // const user = req.body;
       res
         .clearCookie("token", {
           maxAge: 0,
+          secure: process.env.NODE_ENV === "production" ? true : false,
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
         })
-        .send({ success: true });
+        .send({ status: true });
     });
 
     //get all data from db
@@ -95,18 +96,6 @@ async function run() {
       res.send(result);
     });
     //search data
-    // app.get("/all-servic", async (req, res) => {
-    //   try {
-    //     const search = req.query.search;
-    //     let query = {
-    //       sName: { $regex: search, $options: "i" },
-    //     };
-    //     // Your MongoDB query logic here...
-    //   } catch (error) {
-    //     console.error("Error:", error);
-    //     res.status(500).json({ error: "Internal Server Error" });
-    //   }
-    // });
 
     // spasific email
     app.get("/service/:email", async (req, res) => {
@@ -191,7 +180,7 @@ async function run() {
       res.send(result);
     });
 
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
